@@ -1,0 +1,30 @@
+{% extends "movies/base.html" %}
+
+{% block title %} Home Page {% endblock title %}
+
+{% block content %}
+<br><br><br>
+
+
+<center><h3>Viewed</h3></center>
+<div class="row row-cols-1 row-cols-md-3 g-4" style="padding: 10%;">
+    {% for movie in viewed %}
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <a href="{% url 'detail' movie.url %}"><h5 class="card-title">{{ movie.name }}</h5></a>
+                    <p class="card-text">Genres:
+                        {% for genre in movie.genre.all %}
+                            {{ genre }};
+                        {% endfor %}
+                        <h2><a href="{% url 'abandoned' movie.url %}">Abandon Movie</a></h2>
+                    </p>
+                </div>
+            </div>
+        </div>
+<br>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "movies/base.html" %}
+
+{% block title %} {{ user.username }}'s Profile {% endblock title %}
+
+{% block content %}
+
+<br><br><br>
+<center><div>
+    <h1>My Lists</h1>
+</div></center>
+<div class="accordion accordion-flush" id="accordionFlushExample">
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="flush-headingOne">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+        Watch Later
+      </button>
+    </h2>
+    <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+      <div class="accordion-body"><a href="{% url 'watch_later_list' %}"><span>Go to List</span></a> | Total Movies in this List: {{ count1 }}</div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="flush-headingTwo">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false" aria-controls="flush-collapseTwo">
+        Viewed
+      </button>
+    </h2>
+    <div id="flush-collapseTwo" class="accordion-collapse collapse" aria-labelledby="flush-headingTwo" data-bs-parent="#accordionFlushExample">
+      <div class="accordion-body"><a href="{% url 'viewed_list' %}"><span>Go to List</span></a> | Total Movies in this List: {{ count2 }}</div>
+    </div>
+  </div>
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="flush-headingThree">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseThree" aria-expanded="false" aria-controls="flush-collapseThree">
+        Abandoned
+      </button>
+    </h2>
+    <div id="flush-collapseThree" class="accordion-collapse collapse" aria-labelledby="flush-headingThree" data-bs-parent="#accordionFlushExample">
+      <div class="accordion-body"><a href="{% url 'abandoned_list' %}"><span>Go to List</span></a> | Total Movies in this List: {{ count3 }}</div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}

@@ -1,0 +1,48 @@
+{% extends "movies/base.html" %}
+
+{% block title %} {{ movie.name }} {% endblock title %}
+
+{% block content %}
+
+<br><br>
+<center><div>
+    <h1>{{ movie.name }}</h1>
+</div>
+</center>
+<h2>Rating: {{ rate }}</h2>
+voters: {{ movie.voters }}
+rating: {{ movie.rating}}
+{% if user.is_authenticated %}
+    {% if have %}
+        <h2>Already in your "Watch Later" list.</h2>
+    {% else %}
+        <h2><a href="{% url 'watch_later' movie.url %}">Watch Later</a></h2>
+    {% endif %}
+{% endif %}
+{{ profile }}
+<form action="" method="post">
+    {% csrf_token %}
+    {{ form1 }}
+    <input type="submit" value="Submit">
+</form>
+
+<form action="" method="post">
+    {% csrf_token %}
+    {{ form2 }}
+    <input type="submit" value="Submit">
+</form>
+<hr>
+<h2>Comments:</h2>
+{% for comment in comments %}
+    --> {{ comment.author }}: {{ comment.text }}<br>
+{% endfor %}
+<p>Similar:</p>
+<ol>
+{% for sim in similar %}
+    <li>
+        <a href="{% url 'detail' sim.url %}"><h5 class="card-title">{{ sim.name }}</h5></a>
+    </li>
+{% endfor %}
+</ol>
+
+{% endblock content %}
