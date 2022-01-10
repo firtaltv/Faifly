@@ -40,8 +40,11 @@ def movie_detail_view(request, url):
         set_comment(request, form1, movie)
         try:
             set_vote(request, form2, movie)
-            movie.rating += form2.cleaned_data['value']
-            movie.voters += 1
+            if not form2.cleaned_data and not form1.cleaned_data:
+                pass
+            elif form2.cleaned_data:
+                movie.rating += form2.cleaned_data['value']
+                movie.voters += 1
             movie.save()
         except IntegrityError as e:
             print(e)
@@ -93,6 +96,7 @@ def viewed(request, url):
     profile = Profile.objects.get_or_create(user=request.user)
     profile = profile[0]
     profile.viewed.add(movie)
+    profile.watch_later.remove(movie)
     profile.save()
     print(profile.viewed.all())
     return redirect('profile')
@@ -107,6 +111,39 @@ def abandoned(request, url):
     profile.save()
     print(profile.abandoned.all())
     return redirect('profile')
+
+
+@login_required(login_url='login')
+def delete_from_later(request, url):
+    movie = Movie.objects.filter(url=url).first()
+    profile = Profile.objects.get_or_create(user=request.user)
+    profile = profile[0]
+    profile.watch_later.remove(movie)
+    profile.save()
+    print(profile.abandoned.all())
+    return redirect('watch_later_list')
+
+
+@login_required(login_url='login')
+def delete_from_viewed(request, url):
+    movie = Movie.objects.filter(url=url).first()
+    profile = Profile.objects.get_or_create(user=request.user)
+    profile = profile[0]
+    profile.viewed.remove(movie)
+    profile.save()
+    print(profile.abandoned.all())
+    return redirect('viewed_list')
+
+
+@login_required(login_url='login')
+def delete_from_abandoned(request, url):
+    movie = Movie.objects.filter(url=url).first()
+    profile = Profile.objects.get_or_create(user=request.user)
+    profile = profile[0]
+    profile.abandoned.remove(movie)
+    profile.save()
+    print(profile.abandoned.all())
+    return redirect('abandoned_list')
 
 
 @login_required(login_url='login')

@@ -15,6 +15,10 @@ class Genre(models.Model):
         return self.name
 
 
+class MovieImage(models.Model):
+    image = models.ImageField()
+
+
 class MovieSeries(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
@@ -28,6 +32,7 @@ class MovieSeries(models.Model):
 class Movie(models.Model):
     name = models.CharField(max_length=50, unique=True)
     genre = models.ManyToManyField(Genre, related_name='genres')
+    image = models.ImageField(null=True, blank=True)
     url = models.SlugField(max_length=65, unique=True)
     series = models.ForeignKey(MovieSeries, on_delete=models.CASCADE)
     voters = models.IntegerField(default=0)

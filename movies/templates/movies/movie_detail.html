@@ -6,12 +6,14 @@
 
 <br><br>
 <center><div>
+
     <h1>{{ movie.name }}</h1>
+    <img src="{{ movie.image.url }}" alt="Card image cap" height="500px">
+
 </div>
 </center>
 <h2>Rating: {{ rate }}</h2>
 voters: {{ movie.voters }}
-rating: {{ movie.rating}}
 {% if user.is_authenticated %}
     {% if have %}
         <h2>Already in your "Watch Later" list.</h2>
@@ -20,17 +22,22 @@ rating: {{ movie.rating}}
     {% endif %}
 {% endif %}
 {{ profile }}
+{% for field in form1 %}
 <form action="" method="post">
     {% csrf_token %}
-    {{ form1 }}
-    <input type="submit" value="Submit">
+    {{ field }}
+    <input type="submit" value="Comment">
 </form>
+{% endfor %}
 
+
+{% for field in form2 %}
 <form action="" method="post">
     {% csrf_token %}
-    {{ form2 }}
-    <input type="submit" value="Submit">
+    {{ field }}
+    <input type="submit" value="Vote">
 </form>
+{% endfor %}
 <hr>
 <h2>Comments:</h2>
 {% for comment in comments %}

@@ -12,13 +12,14 @@
         <div class="col">
             <div class="card">
                 <div class="card-body">
+                    <img src="{{ movie.image.url }}" alt="Card image cap" height="500px">
                     <a href="{% url 'detail' movie.url %}"><h5 class="card-title">{{ movie.name }}</h5></a>
                     <p class="card-text">Genres:
                         {% for genre in movie.genre.all %}
                             {{ genre }};
                         {% endfor %}
                         <h2><a href="{% url 'viewed' movie.url %}">Viewed</a></h2>
-                        <h2><a href="{% url 'abandoned' movie.url %}">Abandon Movie</a></h2>
+                        <h2><a href="{% url 'delete_later' movie.url %}">delete</a></h2>
                     </p>
                 </div>
             </div>
