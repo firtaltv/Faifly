@@ -12,6 +12,7 @@
 
 </div>
 </center>
+<center>
 <h2>Rating: {{ rate }}</h2>
 voters: {{ movie.voters }}
 {% if user.is_authenticated %}
@@ -26,7 +27,7 @@ voters: {{ movie.voters }}
 <form action="" method="post">
     {% csrf_token %}
     {{ field }}
-    <input type="submit" value="Comment">
+    <input type="submit" value="Comment" name="comm">
 </form>
 {% endfor %}
 
@@ -35,7 +36,7 @@ voters: {{ movie.voters }}
 <form action="" method="post">
     {% csrf_token %}
     {{ field }}
-    <input type="submit" value="Vote">
+    <input type="submit" value="Vote" NAME="vote">
 </form>
 {% endfor %}
 <hr>
@@ -51,5 +52,5 @@ voters: {{ movie.voters }}
     </li>
 {% endfor %}
 </ol>
-
+</center>
 {% endblock content %}

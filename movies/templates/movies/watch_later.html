@@ -18,8 +18,11 @@
                         {% for genre in movie.genre.all %}
                             {{ genre }};
                         {% endfor %}
+                    {% if request.user == profile.user %}
                         <h2><a href="{% url 'viewed' movie.url %}">Viewed</a></h2>
-                        <h2><a href="{% url 'delete_later' movie.url %}">delete</a></h2>
+                        <h2><a href="{% url 'abandoned' movie.url %}">Abandon Movie</a></h2>
+                        <h2><a href="{% url 'delete_later' movie.url %}">Delete from list</a></h2>
+                    {% endif %}
                     </p>
                 </div>
             </div>

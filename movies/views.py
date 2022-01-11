@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from .models import *
 from .forms import MovieRatingForm, MovieReviewForm
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 
 
 def home_view(request):
@@ -19,35 +19,38 @@ def home_view(request):
 
 
 def movie_detail_view(request, url):
-    profile = Profile.objects.filter(user__pk=request.user.pk).first()
+    profile = Profile.objects.filter(user=request.user).first()
     movie = get_object_or_404(Movie, url=url)
     similar = Movie.objects.filter(series=movie.series).all()
     comments = Review.objects.filter(movie=movie).all()
-    votes = Vote.objects.filter(movie=movie).all()
-    have = Profile.objects.filter(watch_later__name__contains=movie.name).first()
+    have = Profile.objects.filter(user=request.user).filter(watch_later__name=movie.name).first()  # Profile.objects.filter(watch_later__name__contains=movie.name).first()
+    if have:
+        print('\n\n\n1\n\n\n')
+    else:
+        print('\n\n\n0\n\n\n')
 
-    print(votes)
     try:
-        curr_rating = round(float(movie.rating/movie.voters), 2)
+        curr_rating = round(float(movie.rating / movie.voters), 2)
     except ZeroDivisionError:
         curr_rating = 0
-    if request.method != 'POST':
-        form1 = MovieReviewForm()
-        form2 = MovieRatingForm()
-    else:
-        form1 = MovieReviewForm(data=request.POST)
-        form2 = MovieRatingForm(data=request.POST)
-        set_comment(request, form1, movie)
-        try:
-            set_vote(request, form2, movie)
-            if not form2.cleaned_data and not form1.cleaned_data:
-                pass
-            elif form2.cleaned_data:
-                movie.rating += form2.cleaned_data['value']
-                movie.voters += 1
+
+    form1 = MovieReviewForm()
+    form2 = MovieRatingForm()
+    if request.method == 'POST':
+        if 'comm' in request.POST:
+            form1 = MovieReviewForm(data=request.POST)
+            set_comment(request, form1, movie)
             movie.save()
-        except IntegrityError as e:
-            print(e)
+        if 'vote' in request.POST:
+            form2 = MovieRatingForm(data=request.POST)
+            try:
+                set_vote(request, form2, movie)
+                if form2.cleaned_data:
+                    movie.rating += form2.cleaned_data['value']
+                    movie.voters += 1
+                movie.save()
+            except IntegrityError as e:
+                print(e)
 
     context = {
         'movie': movie,
@@ -64,11 +67,19 @@ def movie_detail_view(request, url):
 
 
 @login_required(login_url='login')
-def profile_view(request):
-    profile = Profile.objects.get_or_create(user=request.user)
-    count1 = len(profile[0].watch_later.all())
-    count2 = len(profile[0].viewed.all())
-    count3 = len(profile[0].abandoned.all())
+def profile_view(request, pk):
+    if User.objects.filter(id=pk).first() and not Profile.objects.filter(user__id=pk).first():
+        us = User.objects.filter(id=pk).first()
+        p = Profile(user=us)
+        p.save()
+        print(1)
+    elif not User.objects.filter(id=pk).first():
+        return HttpResponse("No such User")
+    profile = Profile.objects.filter(user__id=pk).first()
+
+    count1 = len(profile.watch_later.all())
+    count2 = len(profile.viewed.all())
+    count3 = len(profile.abandoned.all())
 
     context = {
         'profile': profile,
@@ -80,94 +91,156 @@ def profile_view(request):
 
 
 @login_required(login_url='login')
+def go_private(request, pk):
+    profile = Profile.objects.get_or_create(user=request.user)
+    profile = profile[0]
+    profile.is_public = False
+    profile.save()
+    return redirect('profile', pk=pk)
+
+
+@login_required(login_url='login')
+def go_visible(request, pk):
+    profile = Profile.objects.get_or_create(user=request.user)
+    profile = profile[0]
+    profile.is_public = True
+    profile.save()
+    return redirect('profile', pk=pk)
+
+
+@login_required(login_url='login')
 def watch_later(request, url):
+    pk = request.user.id
     movie = Movie.objects.filter(url=url).first()
     profile = Profile.objects.get_or_create(user=request.user)
     profile = profile[0]
+    if Profile.objects.filter(viewed__name=movie.name).first():
+        profile.viewed.remove(movie)
+    elif Profile.objects.filter(abandoned__name=movie.name).first():
+        profile.abandoned.remove(movie)
     profile.watch_later.add(movie)
     profile.save()
     print(profile.watch_later.all())
-    return redirect('profile')
+    return redirect('profile', pk=pk)
 
 
 @login_required(login_url='login')
 def viewed(request, url):
+    pk = request.user.id
     movie = Movie.objects.filter(url=url).first()
     profile = Profile.objects.get_or_create(user=request.user)
     profile = profile[0]
+    if Profile.objects.filter(watch_later__name=movie.name).first():
+        profile.watch_later.remove(movie)
+    elif Profile.objects.filter(abandoned__name=movie.name).first():
+        profile.abandoned.remove(movie)
     profile.viewed.add(movie)
-    profile.watch_later.remove(movie)
     profile.save()
     print(profile.viewed.all())
-    return redirect('profile')
+    return redirect('profile', pk=pk)
 
 
 @login_required(login_url='login')
 def abandoned(request, url):
+    pk = request.user.id
     movie = Movie.objects.filter(url=url).first()
     profile = Profile.objects.get_or_create(user=request.user)
     profile = profile[0]
+    if Profile.objects.filter(watch_later__name=movie.name).first():
+        profile.watch_later.remove(movie)
+    elif Profile.objects.filter(viewed__name=movie.name).first():
+        profile.viewed.remove(movie)
     profile.abandoned.add(movie)
     profile.save()
     print(profile.abandoned.all())
-    return redirect('profile')
+    return redirect('profile', pk=pk)
 
 
 @login_required(login_url='login')
 def delete_from_later(request, url):
+    pk = request.user.id
     movie = Movie.objects.filter(url=url).first()
     profile = Profile.objects.get_or_create(user=request.user)
     profile = profile[0]
     profile.watch_later.remove(movie)
     profile.save()
     print(profile.abandoned.all())
-    return redirect('watch_later_list')
+    return redirect('watch_later_list', pk=pk)
 
 
 @login_required(login_url='login')
 def delete_from_viewed(request, url):
+    pk = request.user.id
     movie = Movie.objects.filter(url=url).first()
     profile = Profile.objects.get_or_create(user=request.user)
     profile = profile[0]
     profile.viewed.remove(movie)
     profile.save()
     print(profile.abandoned.all())
-    return redirect('viewed_list')
+    return redirect('viewed_list', pk=pk)
 
 
 @login_required(login_url='login')
 def delete_from_abandoned(request, url):
+    pk = request.user.id
     movie = Movie.objects.filter(url=url).first()
     profile = Profile.objects.get_or_create(user=request.user)
     profile = profile[0]
     profile.abandoned.remove(movie)
     profile.save()
     print(profile.abandoned.all())
-    return redirect('abandoned_list')
+    return redirect('abandoned_list', pk=pk)
 
 
 @login_required(login_url='login')
-def watch_later_list_view(request):
-    profile = Profile.objects.get_or_create(user=request.user)
-    profile = profile[0]
+def watch_later_list_view(request, pk):
+    if User.objects.filter(id=pk).first() and not Profile.objects.filter(user__id=pk).first():
+        us = User.objects.filter(id=pk).first()
+        p = Profile(user=us)
+        p.save()
+    else:
+        HttpResponse("No such User")
+    profile = Profile.objects.filter(user__id=pk).first()
     watch_later_list = profile.watch_later.all()
-    return render(request, 'movies/watch_later.html', {'watch_later': watch_later_list})
+    context = {'watch_later': watch_later_list,
+               'pk': pk,
+               'profile': profile
+               }
+    return render(request, 'movies/watch_later.html', context=context)
 
 
 @login_required(login_url='login')
-def viewed_list_view(request):
-    profile = Profile.objects.get_or_create(user=request.user)
-    profile = profile[0]
+def viewed_list_view(request, pk):
+    if User.objects.filter(id=pk).first() and not Profile.objects.filter(user__id=pk).first():
+        us = User.objects.filter(id=pk).first()
+        p = Profile(user=us)
+        p.save()
+    else:
+        HttpResponse("No such User")
+    profile = Profile.objects.filter(user__id=pk).first()
     viewed_list = profile.viewed.all()
-    return render(request, 'movies/viewed.html', {'viewed': viewed_list})
+    context = {'viewed': viewed_list,
+               'pk': pk,
+               'profile': profile
+               }
+    return render(request, 'movies/viewed.html', context=context)
 
 
 @login_required(login_url='login')
-def abandoned_list_view(request):
-    profile = Profile.objects.get_or_create(user=request.user)
-    profile = profile[0]
+def abandoned_list_view(request, pk):
+    if User.objects.filter(id=pk).first() and not Profile.objects.filter(user__id=pk).first():
+        us = User.objects.filter(id=pk).first()
+        p = Profile(user=us)
+        p.save()
+    else:
+        HttpResponse("No such User")
+    profile = Profile.objects.filter(user__id=pk).first()
     abandoned_list = profile.abandoned.all()
-    return render(request, 'movies/abandoned.html', {'abandoned_list': abandoned_list})
+    context = {'abandoned_list': abandoned_list,
+               'pk': pk,
+               'profile': profile
+               }
+    return render(request, 'movies/abandoned.html', context=context)
 
 
 @login_required(login_url='login')
@@ -188,3 +261,11 @@ def set_vote(request, form, movie):
         vote.movie = movie
         form.save()
         return HttpResponseRedirect('detail')
+
+
+def users_list(request):
+    users = User.objects.all()
+    context = {
+        'users': users
+    }
+    return render(request, 'movies/users_list.html', context=context)

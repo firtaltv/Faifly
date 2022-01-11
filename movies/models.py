@@ -73,9 +73,9 @@ class Vote(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL,
                                 on_delete=models.CASCADE)
-    watch_later = models.ManyToManyField(Movie, related_name='later')
-    viewed = models.ManyToManyField(Movie, related_name='viewed')
-    abandoned = models.ManyToManyField(Movie, related_name='abandoned')
+    watch_later = models.ManyToManyField(Movie, related_name='later', blank=True)
+    viewed = models.ManyToManyField(Movie, related_name='viewed', blank=True)
+    abandoned = models.ManyToManyField(Movie, related_name='abandoned', blank=True)
     is_public = models.BooleanField(default=True)
 
     def __str__(self):
