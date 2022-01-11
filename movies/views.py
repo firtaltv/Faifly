@@ -23,16 +23,14 @@ def movie_detail_view(request, url):
     movie = get_object_or_404(Movie, url=url)
     similar = Movie.objects.filter(series=movie.series).all()
     comments = Review.objects.filter(movie=movie).all()
-    have = Profile.objects.filter(user=request.user).filter(watch_later__name=movie.name).first()  # Profile.objects.filter(watch_later__name__contains=movie.name).first()
-    if have:
-        print('\n\n\n1\n\n\n')
-    else:
-        print('\n\n\n0\n\n\n')
+    have = Profile.objects.filter(user=request.user).filter(watch_later__name=movie.name).first()
+    have1 = Profile.objects.filter(user=request.user).filter(viewed__name=movie.name).first()
+    have2 = Profile.objects.filter(user=request.user).filter(abandoned__name=movie.name).first()
 
-    try:
-        curr_rating = round(float(movie.rating / movie.voters), 2)
-    except ZeroDivisionError:
-        curr_rating = 0
+    # try:
+    #     curr_rating = round(float(movie.rating / movie.voters), 2)
+    # except ZeroDivisionError:
+    #     curr_rating = 0
 
     form1 = MovieReviewForm()
     form2 = MovieRatingForm()
@@ -40,14 +38,23 @@ def movie_detail_view(request, url):
         if 'comm' in request.POST:
             form1 = MovieReviewForm(data=request.POST)
             set_comment(request, form1, movie)
+            form1 = MovieReviewForm()
             movie.save()
         if 'vote' in request.POST:
+            if Vote.objects.filter(user=request.user).filter(movie__name=movie.name).first():
+                a = Vote.objects.filter(user=request.user).filter(movie__name=movie.name).first()
+                movie.rating -= a.value
+                movie.voters -= 1
+                movie.save()
+                Vote.objects.filter(user=request.user).filter(movie__name=movie.name).delete()
             form2 = MovieRatingForm(data=request.POST)
             try:
                 set_vote(request, form2, movie)
                 if form2.cleaned_data:
                     movie.rating += form2.cleaned_data['value']
                     movie.voters += 1
+                    movie.avg_rate = round(float(movie.rating / movie.voters), 2)
+                form2 = MovieRatingForm()
                 movie.save()
             except IntegrityError as e:
                 print(e)
@@ -55,12 +62,14 @@ def movie_detail_view(request, url):
     context = {
         'movie': movie,
         'similar': similar,
-        'rate': curr_rating,
+        # 'rate': curr_rating,
         'form1': form1,
         'form2': form2,
         'comments': comments,
         'profile': profile,
-        'have': have
+        'have': have,
+        'have1': have1,
+        'have2': have2
     }
 
     return render(request, 'movies/movie_detail.html', context=context)

@@ -13,13 +13,23 @@
 </div>
 </center>
 <center>
-<h2>Rating: {{ rate }}</h2>
+<h2>Rating: {{ movie.avg_rate }}</h2>
 voters: {{ movie.voters }}
 {% if user.is_authenticated %}
     {% if have %}
         <h2>Already in your "Watch Later" list.</h2>
     {% else %}
-        <h2><a href="{% url 'watch_later' movie.url %}">Watch Later</a></h2>
+        <h2><a href="{% url 'watch_later' movie.url %}">Add to Watch Later</a></h2>
+    {% endif %}
+    {% if have1 %}
+        <h2>Already in your "Viewed" list.</h2>
+    {% else %}
+        <h2><a href="{% url 'watch_later' movie.url %}">Add to Viewed</a></h2>
+    {% endif %}
+    {% if have2 %}
+        <h2>Already in your "Abandoned" list.</h2>
+    {% else %}
+        <h2><a href="{% url 'watch_later' movie.url %}">Add to Abandoned</a></h2>
     {% endif %}
 {% endif %}
 {{ profile }}

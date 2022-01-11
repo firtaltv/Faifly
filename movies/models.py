@@ -37,6 +37,7 @@ class Movie(models.Model):
     series = models.ForeignKey(MovieSeries, on_delete=models.CASCADE)
     voters = models.IntegerField(default=0)
     rating = models.IntegerField(default=0)
+    avg_rate = models.FloatField(default=0)
 
     def __str__(self):
         return self.name
@@ -63,7 +64,6 @@ class Vote(models.Model):
     class Meta:
         constraints = [
             CheckConstraint(check=Q(value__range=(0, 5)), name='valid_value'),
-            UniqueConstraint(fields=['user', 'movie'], name='rating_once')
         ]
 
     def __str__(self):
